@@ -1,0 +1,27 @@
+apiVersion: 1
+
+# Copy this file to contact-points.yml and replace placeholder URLs.
+contactPoints:
+  - orgId: 1
+    name: Elysia Slack
+    receivers:
+      - uid: elysia-slack-webhook
+        type: webhook
+        disableResolveMessage: false
+        settings:
+          url: "__SLACK_WEBHOOK_URL__"
+          httpMethod: POST
+          title: "[Elysia Alert] {{ .CommonLabels.alertname }}"
+          message: "{{ .CommonAnnotations.summary }}\n{{ .CommonAnnotations.description }}"
+
+  - orgId: 1
+    name: Elysia Discord
+    receivers:
+      - uid: elysia-discord-webhook
+        type: webhook
+        disableResolveMessage: false
+        settings:
+          url: "__DISCORD_WEBHOOK_URL__"
+          httpMethod: POST
+          title: "[Elysia Alert] {{ .CommonLabels.alertname }}"
+          message: "{{ .CommonAnnotations.summary }}\n{{ .CommonAnnotations.description }}"

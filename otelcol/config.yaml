@@ -1,0 +1,66 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+
+connectors:
+  spanmetrics:
+    namespace: traces.span.metrics
+    histogram:
+      unit: ms
+    exemplars:
+      enabled: true
+    metrics_flush_interval: 15s
+    metrics_expiration: 5m
+    aggregation_cardinality_limit: 10000
+    resource_metrics_key_attributes:
+      - service.name
+      - telemetry.sdk.language
+      - telemetry.sdk.name
+
+exporters:
+  otlp_grpc/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+  otlp_http/loki:
+    endpoint: http://loki:3100
+    logs_endpoint: http://loki:3100/otlp/v1/logs
+  prometheus:
+    endpoint: 0.0.0.0:9464
+  debug:
+    verbosity: detailed
+
+service:
+  telemetry:
+    metrics:
+      level: detailed
+      readers:
+        - pull:
+            exporter:
+              prometheus:
+                host: 0.0.0.0
+                port: 8888
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlp_grpc/jaeger, spanmetrics]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus]
+    metrics/spanmetrics:
+      receivers: [spanmetrics]
+      processors: [batch]
+      exporters: [prometheus]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp_http/loki, debug]
