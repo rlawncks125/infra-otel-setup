@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Jaeger Monitor를 RED 지표와 지연시간의 기본 화면으로 사용하고, 이 대시보드는 로그·커스텀 에러 지표·Collector 상태를 보완합니다.",
+  "description": "Jaeger Monitor를 RED 지표와 지연시간의 기본 화면으로 사용하고, 로그·커스텀 에러 지표·Collector 상태와 단일 trace waterfall을 함께 제공합니다.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
@@ -32,6 +32,18 @@
       "tooltip": "요청률, 오류율, P50/P75/P95와 trace를 확인합니다.",
       "type": "link",
       "url": "http://localhost:16686/monitor"
+    },
+    {
+      "asDropdown": false,
+      "icon": "search",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Grafana Trace 검색",
+      "tooltip": "Explore에서 Jaeger trace를 검색하고 waterfall로 확인합니다.",
+      "type": "link",
+      "url": "/explore?schemaVersion=1&panes=%7B%22trace%22%3A%7B%22datasource%22%3A%22jaeger%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%2C%22datasource%22%3A%7B%22type%22%3A%22jaeger%22%2C%22uid%22%3A%22jaeger%22%7D%2C%22queryType%22%3A%22search%22%2C%22service%22%3A%22%22%2C%22operation%22%3A%22%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-1h%22%2C%22to%22%3A%22now%22%7D%7D%7D&orgId=1"
     }
   ],
   "panels": [
@@ -695,12 +707,44 @@
       ],
       "title": "Collector 내보내기 처리율",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "jaeger",
+        "uid": "jaeger"
+      },
+      "description": "로그의 TraceID 링크를 사용하거나 상단 Trace ID 입력란에 값을 붙여 넣으면 요청 한 건의 전체 span waterfall을 표시합니다.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 51
+      },
+      "id": 15,
+      "options": {},
+      "pluginVersion": "12.3.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "jaeger",
+            "uid": "jaeger"
+          },
+          "query": "${trace_id}",
+          "refId": "A"
+        }
+      ],
+      "title": "Trace Waterfall",
+      "type": "traces"
     }
   ],
   "preload": false,
   "refresh": "10s",
   "schemaVersion": 42,
-  "tags": ["services", "opentelemetry", "logs"],
+  "tags": ["services", "opentelemetry", "logs", "traces"],
   "templating": {
     "list": [
       {
@@ -752,6 +796,24 @@
         "regex": "/^[A-Z]+\\s+(.+)$/",
         "sort": 1,
         "type": "query"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "description": "Jaeger trace ID를 입력하면 아래 Trace Waterfall 패널에서 조회합니다.",
+        "label": "Trace ID",
+        "name": "trace_id",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
       }
     ]
   },
@@ -763,5 +825,5 @@
   "timezone": "",
   "title": "서비스 로그 · 커스텀 지표",
   "uid": "elysia-observability",
-  "version": 15
+  "version": 17
 }

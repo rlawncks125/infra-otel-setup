@@ -1,5 +1,7 @@
 # Observability stack
 
+[GitHub 저장소: rlawncks125/infra-otel-setup](https://github.com/rlawncks125/infra-otel-setup)
+
 애플리케이션과 분리된 로컬 OpenTelemetry 관측 인프라입니다.
 
 ## 구성
@@ -101,6 +103,10 @@ docker system df -v
 
 공용 dashboard 상단의 `서비스` 변수는 spanmetrics의 `service_name` 값을 자동으로 읽습니다. 앱마다 `OTEL_SERVICE_NAME`을 고유하게 지정하면 별도 dashboard 파일을 만들지 않아도 여러 서비스를 선택하거나 동시에 볼 수 있습니다. 선택한 값은 namespace가 붙을 수 있는 Prometheus `exported_job`과 Loki의 `service_name` 필터에 함께 적용됩니다. `All`은 Loki stream selector 제약에 맞춰 빈 문자열을 제외하는 `.+` 정규식으로 치환됩니다.
 
+Grafana의 Jaeger datasource는 trace waterfall과 node graph를 표시합니다. 대시보드 상단 `Trace ID` 입력란에 Jaeger trace ID를 넣으면 하단 `Trace Waterfall` panel에서 단일 요청의 span 구조를 확인할 수 있습니다. 더 넓은 조건으로 찾을 때는 `Grafana Trace 검색` 링크에서 Jaeger datasource를 선택합니다.
+
+Loki datasource는 OTLP log의 structured metadata인 `trace_id`를 derived field로 인식합니다. 로그 상세의 `Grafana waterfall 열기` 링크는 같은 trace를 Jaeger datasource로 조회합니다. 반대로 trace span의 logs 버튼은 `service.name`을 Loki의 `service_name`으로 매핑하고 같은 `trace_id`를 조회하므로 trace와 log 사이를 양방향으로 이동할 수 있습니다.
+
 새 앱을 연결할 때는 `../../docs/llm/observability/README.md`가 아니라 저장소 루트의 `docs/llm/observability/README.md`를 기준으로 사용합니다.
 
 ## Jaeger SPM
@@ -112,7 +118,7 @@ Collector의 `spanmetrics` connector가 trace에서 다음 Prometheus metric을 
 
 Jaeger는 Prometheus에서 이 RED metric을 조회해 <http://localhost:16686/monitor>에 서비스별 요청률, 오류율, 지연시간을 표시합니다. `server` span kind가 없는 operation은 Monitor 기본 조회에서 보이지 않을 수 있습니다.
 
-요청률, 오류율, P95와 trace drill-down은 Jaeger Monitor를 기본 화면으로 사용합니다. 현재 Jaeger operation 표는 P95만 표시하므로 Grafana에는 같은 spanmetrics histogram에서 계산하는 P50/P75/P95 비교 패널 하나를 둡니다. 이 패널은 평균값이 아니며, `All`에서도 서비스와 endpoint별 시계열을 분리합니다. 나머지 Grafana panel은 로그, custom error metric, Collector 상태를 보완합니다.
+요청률, 오류율, P95와 trace 검색은 Jaeger Monitor를 기본 화면으로 사용합니다. 개별 trace의 waterfall과 trace-log 상관관계는 Grafana에서 확인합니다. 현재 Jaeger operation 표는 P95만 표시하므로 Grafana에는 같은 spanmetrics histogram에서 계산하는 P50/P75/P95 비교 패널 하나를 둡니다. 이 패널은 평균값이 아니며, `All`에서도 서비스와 endpoint별 시계열을 분리합니다. 나머지 Grafana panel은 로그, custom error metric, Collector 상태를 보완합니다.
 
 서비스와 endpoint 수에 따라 범례 항목이 늘어나는 `엔트포인트 최대 처리시간`과 `P50/P75/P95` panel은 범례를 오른쪽에 배치하고 너비를 Grafana가 자동 계산하게 둡니다. 현재 Grafana 12.3.3의 dashboard schema에는 최신 문서의 legend item limit과 series visibility filter가 없으므로 지원하지 않는 option을 미리 넣지 않습니다.
 

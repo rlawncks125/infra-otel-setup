@@ -13,9 +13,31 @@ datasources:
     type: jaeger
     access: proxy
     url: http://jaeger:16686
+    jsonData:
+      nodeGraph:
+        enabled: true
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: -1m
+        spanEndTimeShift: 1m
+        tags:
+          - key: service.name
+            value: service_name
+        filterByTraceID: false
+        filterBySpanID: false
+        customQuery: true
+        query: '{$${__tags}} | trace_id="$${__trace.traceId}"'
 
   - name: Loki
     uid: loki
     type: loki
     access: proxy
     url: http://loki:3100
+    jsonData:
+      derivedFields:
+        - name: TraceID
+          matcherType: label
+          matcherRegex: trace_id
+          datasourceUid: jaeger
+          url: '$${__value.raw}'
+          urlDisplayLabel: Grafana waterfall 열기
